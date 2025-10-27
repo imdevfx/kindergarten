@@ -22,7 +22,6 @@ class AuthController extends Controller
             $user = User::query()
                 ->where('login', $request->login)
                 ->first();
-
             $token = $user->createToken('token-name', [$user->login])->plainTextToken;
             return $this->successResponse([
                 'token' => $token,

@@ -10,4 +10,9 @@ class Neighborhood extends Model
         'district_id',
         'name'
     ];
+
+    public function companies()
+    {
+        return $this->hasMany(Company::class);
+    }
 }
