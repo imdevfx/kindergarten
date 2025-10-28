@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Regions\DistrictController;
 use App\Http\Controllers\Regions\RegionController;
+use App\Http\Controllers\Tests\TestController;
 use App\Http\Controllers\Users\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -17,6 +18,9 @@ Route::group(['prefix' => 'dashboard',['middleware' => ['auth:sanctum','role:adm
     Route::post('create/data', [RegionController::class,'store']);
     Route::post('update/data', [RegionController::class,'update']);
     Route::post('delete/data', [RegionController::class,'destroy']);
+
+//    TESTS
+    Route::post('tests',[TestController::class,'store']);
 
 
 //    FOYDALANUVCHILAR RUYXATI
