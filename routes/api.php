@@ -3,11 +3,13 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Regions\DistrictController;
 use App\Http\Controllers\Regions\RegionController;
+use App\Http\Controllers\Users\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 
 Route::post('login',[AuthController::class,'login']);
+Route::post('register',[AuthController::class,'register']);
 
 Route::get('region/all', [RegionController::class,'getAll']);
 Route::group(['prefix' => 'dashboard',['middleware' => ['auth:sanctum','role:administrator']]], function (){
@@ -15,4 +17,8 @@ Route::group(['prefix' => 'dashboard',['middleware' => ['auth:sanctum','role:adm
     Route::post('create/data', [RegionController::class,'store']);
     Route::post('update/data', [RegionController::class,'update']);
     Route::post('delete/data', [RegionController::class,'destroy']);
+
+
+//    FOYDALANUVCHILAR RUYXATI
+    Route::get('users', [UserController::class,'paginate']);
 });
