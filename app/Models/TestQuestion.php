@@ -12,6 +12,11 @@ class TestQuestion extends Model
         'name'
     ];
 
+    public function category()
+    {
+        return $this->belongsTo(TestCategory::class);
+    }
+
     public function variants(): HasMany
     {
         return $this->hasMany(TestVariant::class);

@@ -11,18 +11,31 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('login',[AuthController::class,'login']);
 Route::post('register',[AuthController::class,'register']);
-
 Route::get('region/all', [RegionController::class,'getAll']);
-Route::group(['prefix' => 'dashboard',['middleware' => ['auth:sanctum','role:administrator']]], function (){
-    Route::get('data', [RegionController::class,'index']);
-    Route::post('create/data', [RegionController::class,'store']);
-    Route::post('update/data', [RegionController::class,'update']);
-    Route::post('delete/data', [RegionController::class,'destroy']);
 
-//    TESTS
-    Route::post('tests',[TestController::class,'store']);
+Route::group([['middleware' => ['auth:sanctum']]], function (){
+
+    //    ADMIN
+    Route::group(['prefix' => 'dashboard','middleware' => ['role:administrator']],function (){
+        Route::get('data', [RegionController::class,'index']);
+        Route::post('create/data', [RegionController::class,'store']);
+        Route::post('update/data', [RegionController::class,'update']);
+        Route::post('delete/data', [RegionController::class,'destroy']);
+
+    //    TESTS
+        Route::post('tests',[TestController::class,'store']);
 
 
-//    FOYDALANUVCHILAR RUYXATI
-    Route::get('users', [UserController::class,'paginate']);
+    //    FOYDALANUVCHILAR RUYXATI
+        Route::get('users', [UserController::class,'paginate']);
+    });
+
+
+//    Route::group([],function (){
+        Route::get('questions', [TestController::class, 'questions']);
+        Route::post('submit', [TestController::class, 'saveAnswer']);
+        Route::get('result/{response_id}', [TestController::class, 'result']);
+//    });
 });
+
+

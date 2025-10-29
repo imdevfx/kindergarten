@@ -10,7 +10,6 @@ class TestCategory extends Model
     protected $fillable = [
         'name',
         'is_active',
-        'desc'
     ];
 
     public function questions(): HasMany
