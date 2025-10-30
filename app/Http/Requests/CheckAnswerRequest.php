@@ -26,6 +26,7 @@ class CheckAnswerRequest extends FormRequest
             'answers' => 'required|array|min:1',
             'answers.*.question_id' => 'required|exists:test_questions,id',
             'answers.*.value' => 'required|integer|min:1|max:5',
+            'answers.*.variant_id' => 'required|exists:test_variants,id',
         ];
     }
 }

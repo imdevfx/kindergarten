@@ -12,11 +12,22 @@ class Answer extends Model
     protected $fillable = [
         'response_id',
         'test_question_id',
+        'test_variant_id',
         'value',
     ];
 
-    public function question(): BelongsTo
+    public function response()
     {
-        return $this->belongsTo(TestQuestion::class);
+        return $this->belongsTo(Response::class);
+    }
+
+    public function question()
+    {
+        return $this->belongsTo(TestQuestion::class,'test_question_id','id');
+    }
+
+    public function variant()
+    {
+        return $this->belongsTo(TestVariant::class, 'test_variant_id');
     }
 }

@@ -10,6 +10,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -21,16 +22,21 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        if (Auth::attempt(['login' => $request->login, 'password' => $request->password])) {
-            $user = User::query()
-                ->where('login', $request->login)
-                ->first();
-            $token = $user->createToken('token-name', [$user->login])->plainTextToken;
-            return $this->successResponse([
-                'token' => $token,
-            ], new UserResource($user));
+        // 🔍 Foydalanuvchini topamiz
+        $user = User::where('login', $request->login)->first();
+
+        // 🔑 Parolni tekshiramiz
+        if (! $user || ! Hash::check($request->password, $user->password)) {
+            return $this->errorResponse('Login yoki parolingiz xato!');
         }
-        return $this->errorResponse('Login yoki parolingiz xato!');
+
+        // 🪙 Token yaratamiz
+        $token = $user->createToken('token-name')->plainTextToken;
+
+        // ✅ Javob qaytaramiz
+        return $this->successResponse([
+            'token' => $token,
+        ], new UserResource($user));
     }
 
     public function register(Request $request)

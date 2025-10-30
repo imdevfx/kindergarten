@@ -26,10 +26,10 @@ class TestController extends Controller
                 'tests.*.questions' => ['nullable', 'array'],
                 'tests.*.questions.*.name' => ['required_with:tests.*.questions', 'string'],
 
-//                // Variants
-//                'tests.*.questions.*.variants' => ['nullable', 'array'],
-//                'tests.*.questions.*.variants.*.name' => ['required_with:tests.*.questions.*.variants', 'string'],
-//                'tests.*.questions.*.variants.*.answer' => ['required_with:tests.*.questions.*.variants', 'boolean'],
+                // Variants
+                'tests.*.questions.*.variants' => ['nullable', 'array'],
+                'tests.*.questions.*.variants.*.name' => ['required_with:tests.*.questions.*.variants', 'string'],
+                'tests.*.questions.*.variants.*.answer' => ['required_with:tests.*.questions.*.variants', 'boolean'],
             ], [
                 // Root test messages
                 'tests.required' => 'Testlar majburiy.',
@@ -43,12 +43,12 @@ class TestController extends Controller
                 'tests.*.questions.array' => 'Savollar ro‘yxati noto‘g‘ri formatda.',
                 'tests.*.questions.*.name.required_with' => 'Savol nomi kiritilishi shart.',
 
-//                // Variants
-//                'tests.*.questions.*.variants.array' => 'Variantlar ro‘yxati noto‘g‘ri formatda.',
-//                'tests.*.questions.*.variants.*.name.required_with' => 'Har bir variant nomi kiritilishi shart.',
-//                'tests.*.questions.*.variants.*.name.string' => 'Variant nomi matn ko‘rinishida bo‘lishi kerak.',
-//                'tests.*.questions.*.variants.*.answer.required_with' => 'Har bir variant uchun javob qiymati tanlanishi shart.',
-//                'tests.*.questions.*.variants.*.answer.boolean' => 'Variant javobi true yoki false qiymatda bo‘lishi kerak.',
+                // Variants
+                'tests.*.questions.*.variants.array' => 'Variantlar ro‘yxati noto‘g‘ri formatda.',
+                'tests.*.questions.*.variants.*.name.required_with' => 'Har bir variant nomi kiritilishi shart.',
+                'tests.*.questions.*.variants.*.name.string' => 'Variant nomi matn ko‘rinishida bo‘lishi kerak.',
+                'tests.*.questions.*.variants.*.answer.required_with' => 'Har bir variant uchun javob qiymati tanlanishi shart.',
+                'tests.*.questions.*.variants.*.answer.boolean' => 'Variant javobi true yoki false qiymatda bo‘lishi kerak.',
             ]);
             DB::beginTransaction(); // 🔒 xavfsizlik uchun transaction
 
@@ -94,54 +94,66 @@ class TestController extends Controller
     // ✅ 1. Bo‘limlar bilan savollarni olish
     public function questions()
     {
-        $categories = TestCategory::query()
-            ->with('questions')
-            ->where('is_active',true)
-            ->get();
-
-        $options = [
-            ['value' => 1, 'label' => 'Hech qachon'],
-            ['value' => 2, 'label' => 'Kamdan-kam'],
-            ['value' => 3, 'label' => 'Ba’zan'],
-            ['value' => 4, 'label' => 'Ko‘pincha'],
-            ['value' => 5, 'label' => 'Har doim'],
-        ];
+        $tests = TestCategory::with([
+            'questions.variants' => function ($query) {
+                $query->select('id', 'test_question_id', 'name');
+            },
+            'questions' => function ($query) {
+                $query->select('id', 'test_category_id', 'name');
+            }
+        ])->select('id', 'name')->get();
 
         return response()->json([
-            'status' => true,
-            'data' => compact('categories', 'options')
+            'success' => true,
+            'data' => $tests
         ]);
     }
 
     // ✅ 2. Javoblarni saqlash
     public function saveAnswer(CheckAnswerRequest $request)
     {
+        $userId = auth()->id() ?? 1; // 🔒 yoki faqat auth()->id() desangiz ham bo‘ladi
+
+        // 🔹 1. Tekshiramiz — foydalanuvchi allaqachon test topshirganmi?
+        $exists = Response::where('user_id', $userId)->exists();
+        if ($exists) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Siz allaqachon testni topshirgansiz.',
+            ], 403);
+        }
+
+        // 🔹 2. Javoblarni hisoblaymiz
         $answers = $request->validated()['answers'];
         $total = collect($answers)->sum('value');
 
+        // 🔹 3. Response yaratamiz
         $response = Response::create([
-//            'user_id' => auth()->id(),
-            'user_id' => 1,
+            'user_id' => $userId,
             'total_score' => $total,
         ]);
 
+        // 🔹 4. Har bir javobni saqlaymiz
         foreach ($answers as $ans) {
             Answer::create([
                 'response_id' => $response->id,
                 'test_question_id' => $ans['question_id'],
+                'test_variant_id' => $ans['variant_id'],
                 'value' => $ans['value'],
             ]);
         }
 
+        // 🔹 5. Kategoriya aniqlash (masalan: past, o‘rta, yuqori)
         $category = $this->scoreCategory($total, count($answers) * 4);
 
+        // 🔹 6. Javob qaytaramiz
         return response()->json([
             'status' => true,
             'message' => 'Test muvaffaqiyatli yakunlandi',
             'data' => [
                 'response_id' => $response->id,
                 'total_score' => $total,
-                'message' => $category,
+                'category' => $category,
             ]
         ]);
     }
@@ -149,13 +161,22 @@ class TestController extends Controller
     // ✅ 3. Natijani olish
     public function result($response_id)
     {
-        $response = Response::with('answers.question.category')->findOrFail($response_id);
+        $response = Response::with('answers.question.category', 'answers.variant')->findOrFail($response_id);
         $category = $this->scoreCategory($response->total_score, $response->answers->count() * 4);
 
         return response()->json([
             'status' => true,
             'data' => [
-                'response' => $response,
+                'user' => $response->user->only(['id', 'name', 'email']),
+                'total_score' => $response->total_score,
+                'questions' => $response->answers->map(function ($answer) {
+                    return [
+                        'question' => $answer->question->title,
+                        'category' => $answer->question->category->name,
+                        'selected_variant' => $answer->variant->name, // ✅ foydalanuvchi tanlagan variant matni
+                        'selected_value' => $answer->value,
+                    ];
+                }),
                 'category' => $category,
             ]
         ]);

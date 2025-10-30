@@ -14,7 +14,7 @@ class TestQuestion extends Model
 
     public function category()
     {
-        return $this->belongsTo(TestCategory::class);
+        return $this->belongsTo(TestCategory::class,'test_category_id');
     }
 
     public function variants(): HasMany

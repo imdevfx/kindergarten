@@ -13,7 +13,7 @@ Route::post('login',[AuthController::class,'login']);
 Route::post('register',[AuthController::class,'register']);
 Route::get('region/all', [RegionController::class,'getAll']);
 
-Route::group([['middleware' => ['auth:sanctum']]], function (){
+Route::group([['middleware' => ['auth:api']]], function (){
 
     //    ADMIN
     Route::group(['prefix' => 'dashboard','middleware' => ['role:administrator']],function (){
@@ -31,11 +31,11 @@ Route::group([['middleware' => ['auth:sanctum']]], function (){
     });
 
 
-//    Route::group([],function (){
+    Route::group(['middleware' => ['role:educator']],function (){
         Route::get('questions', [TestController::class, 'questions']);
         Route::post('submit', [TestController::class, 'saveAnswer']);
         Route::get('result/{response_id}', [TestController::class, 'result']);
-//    });
+    });
 });
 
 

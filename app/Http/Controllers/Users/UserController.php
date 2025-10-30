@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Users;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
+use App\Http\Resources\UserShowResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -14,7 +15,6 @@ class UserController extends Controller
         $users = User::query()
             ->orderByDesc('created_at')
             ->paginate(\request()->query('pagination',20));
-
-        return UserResource::collection($users);
+        return UserShowResource::collection($users);
     }
 }

@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
             SamarkandSeeder::class,
             TashkentSeeder::class,
             UserAndRoleSeeder::class,
-            TestSeeder::class
+//            TestSeeder::class
         ]);
     }
 }
