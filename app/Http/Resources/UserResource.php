@@ -25,7 +25,8 @@ class UserResource extends JsonResource
             'roles' => $this->getRoleNames()
                 ->map(fn($role) => RoleEnum::from($role)->label())
                 ->values(),
-            'profile' => new ProfileResource($this->profile)
+            'profile' => new ProfileResource($this->profile),
+            'response' => $this->responses()->exists()
         ];
     }
 }
