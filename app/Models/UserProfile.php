@@ -16,6 +16,11 @@ class UserProfile extends Model
         'phone',
     ];
 
+    public function user(): HasOne
+    {
+        return $this->hasOne(User::class,'id','user_id');
+    }
+
     public function region()
     {
         return $this->belongsTo(Region::class);

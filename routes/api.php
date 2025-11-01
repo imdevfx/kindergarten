@@ -28,6 +28,19 @@ Route::group([['middleware' => ['auth:api']]], function (){
 
     //    FOYDALANUVCHILAR RUYXATI
         Route::get('users', [UserController::class,'paginate']);
+
+        Route::prefix('statistics')->controller(\App\Http\Controllers\Statistics\StatisticController::class)->group(function () {
+            Route::get('/overview', 'overview');
+            Route::get('/by-region', 'byRegion');
+            Route::get('/by-district', 'byDistrict');
+            Route::get('/by-company', 'byCompany');
+            Route::get('/user-activity', 'userActivity');
+            Route::get('/leaderboard', 'leaderboard');
+            Route::get('/daily-stats', 'dailyStats');
+            Route::get('/export', 'exportSummary');
+        });
+
+
     });
 
 
