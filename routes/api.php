@@ -32,6 +32,7 @@ Route::group([['middleware' => ['auth:api']]], function (){
         Route::prefix('statistics')->controller(\App\Http\Controllers\Statistics\StatisticController::class)->group(function () {
             Route::get('/overview', 'overview');
             Route::get('/by-region', 'byRegion');
+            Route::get('/by-neighborhood', 'byNeighborhood');
             Route::get('/by-district', 'byDistrict');
             Route::get('/by-company', 'byCompany');
             Route::get('/user-activity', 'userActivity');

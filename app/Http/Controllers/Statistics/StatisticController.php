@@ -15,6 +15,16 @@ use Illuminate\Support\Facades\DB;
 
 class StatisticController extends Controller
 {
+
+    protected function applyLocationFilters($query, Request $request)
+    {
+        return $query->when($request->region_id, fn($q) => $q->where('region_id', $request->region_id))
+            ->when($request->district_id, fn($q) => $q->where('district_id', $request->district_id))
+            ->when($request->neighborhood_id, fn($q) => $q->where('neighborhood_id', $request->neighborhood_id))
+            ->when($request->company_id, fn($q) => $q->where('company_id', $request->company_id));
+    }
+
+
     /**
      * 1️⃣ Umumiy raqamlar
      */
@@ -36,9 +46,12 @@ class StatisticController extends Controller
     /**
      * 2️⃣ Region bo‘yicha tahlil
      */
-    public function byRegion()
+    public function byRegion(Request $request)
     {
-        $regions = Region::with(['districts.neighborhoods.companies.profiles.user.responses'])->get();
+        $regions = Region::query()
+            ->when($request->region_id, fn($q) => $q->where('id', $request->region_id))
+            ->with(['districts.neighborhoods.companies.profiles.user.responses'])
+            ->get();
 
         $data = $regions->map(function ($region) {
             $users = $region->districts
@@ -49,6 +62,7 @@ class StatisticController extends Controller
             $responses = $users->flatMap(fn($u) => $u->user->responses);
 
             return [
+                'id' => $region->id,
                 'region' => $region->name,
                 'user_count' => $users->count(),
                 'response_count' => $responses->count(),
@@ -63,13 +77,18 @@ class StatisticController extends Controller
     /**
      * 3️⃣ District bo‘yicha tahlil
      */
-    public function byDistrict()
+    public function byDistrict(Request $request)
     {
-        $districts = District::with(['neighborhoods.companies.profiles.user.responses'])->get();
+        $districts = District::query()
+            ->when($request->region_id, fn($q) => $q->where('region_id', $request->region_id))
+            ->when($request->district_id, fn($q) => $q->where('id', $request->district_id))
+            ->with(['neighborhoods.companies.profiles.user.responses'])
+            ->get();
 
         $data = $districts->map(function ($district) {
             $users = $district->neighborhoods
                 ->flatMap(fn($n) => $n->companies->flatMap(fn($c) => $c->profiles));
+
             $responses = $users->flatMap(fn($u) => $u->user->responses);
 
             return [
@@ -83,18 +102,50 @@ class StatisticController extends Controller
         return response()->json($data);
     }
 
+    public function byNeighborhood(Request $request)
+    {
+        $neighborhoods = Neighborhood::query()
+            ->when($request->district_id, fn($q) => $q->where('district_id', $request->district_id))
+            ->when($request->neighborhood_id, fn($q) => $q->where('id', $request->neighborhood_id))
+            ->with(['district.region', 'companies.profiles.user.responses'])
+            ->get();
+
+        $data = $neighborhoods->map(function ($n) {
+            $profiles = $n->companies->flatMap(fn($c) => $c->profiles);
+            $responses = $profiles->flatMap(fn($p) => $p->user->responses);
+
+            return [
+                'neighborhood' => $n->name,
+                'region' => $n->district->region->name ?? null,
+                'district' => $n->district->name ?? null,
+                'user_count' => $profiles->count(),
+                'response_count' => $responses->count(),
+                'avg_score' => round($responses->avg('total_score'), 2),
+                'max_score' => $responses->max('total_score'),
+            ];
+        });
+
+        return response()->json($data);
+    }
+
     /**
      * 4️⃣ Kompaniya bo‘yicha tahlil
      */
-    public function byCompany()
+    public function byCompany(Request $request)
     {
-        $companies = Company::with(['neighborhood.district.region', 'profiles.user.responses'])->get();
+        $companies = Company::query()
+            ->when($request->neighborhood_id, fn($q) => $q->where('neighborhood_id', $request->neighborhood_id))
+            ->when($request->company_id, fn($q) => $q->where('id', $request->company_id))
+            ->with(['neighborhood.district.region', 'profiles.user.responses'])
+            ->get();
 
         $data = $companies->map(function ($company) {
             $responses = $company->profiles->flatMap(fn($u) => $u->user->responses);
             return [
                 'company' => $company->name,
                 'region' => $company->neighborhood->district->region->name ?? null,
+                'district' => $company->neighborhood->district->name ?? null,
+                'neighborhood' => $company->neighborhood->name ?? null,
                 'user_count' => $company->profiles->count(),
                 'response_count' => $responses->count(),
                 'avg_score' => round($responses->avg('total_score'), 2),
@@ -133,13 +184,14 @@ class StatisticController extends Controller
     /**
      * 7️⃣ Eng yuqori ball olganlar (leaderboard)
      */
-    public function leaderboard()
+    public function leaderboard(Request $request)
     {
-        $leaders = User::with('profile.company')
-            ->withAvg('responses', 'total_score')
-            ->orderByDesc('responses_avg_total_score')
-            ->take(10)
-            ->get();
+        $query = User::with('profile.company.neighborhood.district.region')
+            ->withAvg('responses', 'total_score');
+
+//        $this->applyLocationFilters($query, $request);
+
+        $leaders = $query->orderByDesc('responses_avg_total_score')->take(10)->get();
 
         return response()->json($leaders->map(fn($u) => [
             'user' => $u->firstname.' '.$u->lastname,
