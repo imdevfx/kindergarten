@@ -92,6 +92,7 @@ class StatisticController extends Controller
             $responses = $users->flatMap(fn($u) => $u->user->responses);
 
             return [
+                'id' => $district->id,
                 'district' => $district->name,
                 'user_count' => $users->count(),
                 'response_count' => $responses->count(),
@@ -115,6 +116,7 @@ class StatisticController extends Controller
             $responses = $profiles->flatMap(fn($p) => $p->user->responses);
 
             return [
+                'id' => $n->id,
                 'neighborhood' => $n->name,
                 'region' => $n->district->region->name ?? null,
                 'district' => $n->district->name ?? null,
@@ -142,6 +144,7 @@ class StatisticController extends Controller
         $data = $companies->map(function ($company) {
             $responses = $company->profiles->flatMap(fn($u) => $u->user->responses);
             return [
+                'id' => $company->id,
                 'company' => $company->name,
                 'region' => $company->neighborhood->district->region->name ?? null,
                 'district' => $company->neighborhood->district->name ?? null,
