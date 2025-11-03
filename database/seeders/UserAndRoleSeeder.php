@@ -21,7 +21,7 @@ class UserAndRoleSeeder extends Seeder
 
         // 🔹 Rollarni yaratamiz (agar mavjud bo‘lmasa)
         foreach ($roles as $roleName) {
-            Role::firstOrCreate(['name' => $roleName]);
+            Role::firstOrCreate(['name' => $roleName,'guard_name' => 'api']);
         }
 
         $users = [
