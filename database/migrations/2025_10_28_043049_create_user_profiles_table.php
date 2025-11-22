@@ -26,13 +26,17 @@ return new class extends Migration
                 ->cascadeOnUpdate()
                 ->cascadeOnDelete();
             $table->foreignIdFor(\App\Models\Neighborhood::class)
+                ->nullable()
                 ->constrained()
                 ->cascadeOnUpdate()
                 ->cascadeOnDelete();
             $table->foreignIdFor(\App\Models\Company::class)
+                ->nullable()
                 ->constrained()
                 ->cascadeOnUpdate()
                 ->cascadeOnDelete();
+            $table->string('neighborhood')->nullable();
+            $table->string('company')->nullable();
             $table->string('phone')->nullable();
             $table->timestamps();
         });

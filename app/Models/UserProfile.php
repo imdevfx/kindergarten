@@ -12,6 +12,8 @@ class UserProfile extends Model
         'region_id',
         'district_id',
         'neighborhood_id',
+        'neighborhood',
+        'company',
         'company_id',
         'phone',
     ];
@@ -39,5 +41,16 @@ class UserProfile extends Model
     public function company()
     {
         return $this->belongsTo(Company::class);
+    }
+
+
+    public function neighborhoodRelation()
+    {
+        return $this->belongsTo(Neighborhood::class, 'neighborhood_id');
+    }
+
+    public function companyRelation()
+    {
+        return $this->belongsTo(Company::class, 'company_id');
     }
 }

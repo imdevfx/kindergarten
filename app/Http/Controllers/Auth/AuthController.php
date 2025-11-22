@@ -49,8 +49,10 @@ class AuthController extends Controller
                 'phone' => 'required',
                 'region_id' => 'required|exists:regions,id',
                 'district_id' => 'required|exists:districts,id',
-                'neighborhood_id' => 'required|exists:neighborhoods,id',
-                'company_id' => 'required|exists:companies,id',
+//                'neighborhood_id' => 'required|exists:neighborhoods,id',
+                'neighborhood' => 'required',
+                'company' => 'required',
+//                'company_id' => 'required|exists:companies,id',
                 'login' => 'required|unique:users,login',
                 'password' => 'required|confirmed|min:6',
             ], [
@@ -64,11 +66,14 @@ class AuthController extends Controller
                 'district_id.required' => 'Tuman (shahar) tanlanishi shart.',
                 'district_id.exists' => 'Tanlangan tuman (shahar) mavjud emas.',
 
-                'neighborhood_id.required' => 'MFY tanlanishi shart.',
-                'neighborhood_id.exists' => 'Tanlangan MFY mavjud emas.',
+//                'neighborhood_id.required' => 'MFY tanlanishi shart.',
+//                'neighborhood_id.exists' => 'Tanlangan MFY mavjud emas.',
+//
+//                'company_id.required' => 'Tashkilot tanlanishi shart.',
+//                'company_id.exists' => 'Tanlangan tashkilot mavjud emas.',
 
-                'company_id.required' => 'Tashkilot tanlanishi shart.',
-                'company_id.exists' => 'Tanlangan tashkilot mavjud emas.',
+                'neighborhood.required' => 'MFY kiritilishi shart.',
+                'company.required' => 'Tashkilot kiritilishi shart.',
 
                 'login.required' => 'Login kiritilishi shart.',
                 'login.unique' => 'Bunday login tizimda mavjud.',
@@ -91,8 +96,10 @@ class AuthController extends Controller
             $user->profile()->create([
                 'region_id' => $validated['region_id'],
                 'district_id' => $validated['district_id'],
-                'neighborhood_id' => $validated['neighborhood_id'],
-                'company_id' => $validated['company_id'],
+                'neighborhood_id' => $validated['neighborhood_id'] ?? null,
+                'company_id' => $validated['company_id'] ?? null,
+                'neighborhood' => $validated['neighborhood'],
+                'company' => $validated['company'],
                 'phone' => $validated['phone'],
             ]);
 
