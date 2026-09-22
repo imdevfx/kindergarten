@@ -13,7 +13,7 @@ Route::post('login',[AuthController::class,'login']);
 Route::post('register',[AuthController::class,'register']);
 Route::get('region/all', [RegionController::class,'getAll']);
 
-Route::group([['middleware' => ['auth']]], function (){
+Route::group(['middleware' => ['auth:sanctum']], function (){
 
     //    ADMIN
     Route::group(['prefix' => 'dashboard','middleware' => ['role:administrator']],function (){
