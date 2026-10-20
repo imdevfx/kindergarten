@@ -23,6 +23,7 @@ Route::group(['middleware' => ['auth:sanctum']], function (){
         Route::post('delete/data', [RegionController::class,'destroy']);
 
     //    TESTS
+        Route::get('tests', [TestController::class, 'questions']);
         Route::post('tests',[TestController::class,'store']);
 
 
@@ -45,10 +46,18 @@ Route::group(['middleware' => ['auth:sanctum']], function (){
     });
 
 
-    Route::group(['middleware' => ['role:educator']],function (){
+    Route::group(['middleware' => ['role:educator|administrator']], function () {
+        // Kategoriyalar ro'yxati + qaysilari ishlangan (is_completed flag bilan)
         Route::get('questions', [TestController::class, 'questions']);
+
+        // Test topshirish
         Route::post('submit', [TestController::class, 'saveAnswer']);
+
+        // Bitta natijani ko'rish
         Route::get('result/{response_id}', [TestController::class, 'result']);
+
+        // Barcha topshirilgan kategoriyalar natijalari
+        Route::get('my-results', [TestController::class, 'myResults']);
     });
 });
 

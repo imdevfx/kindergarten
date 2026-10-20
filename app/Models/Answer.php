@@ -13,7 +13,6 @@ class Answer extends Model
         'response_id',
         'test_question_id',
         'test_variant_id',
-        'value',
     ];
 
     public function response()

@@ -11,4 +11,11 @@ class TestVariant extends Model
         'name',
         'answer'
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'answer' => 'boolean',
+        ];
+    }
 }

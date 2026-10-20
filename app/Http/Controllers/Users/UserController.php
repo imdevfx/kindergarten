@@ -13,8 +13,17 @@ class UserController extends Controller
     public function paginate()
     {
         $users = User::query()
+            ->with([
+                'roles',
+                'profile.region',
+                'profile.district',
+                'profile.neighborhood',
+                'profile.company',
+                'responses.answers.question.category',
+                'responses.answers.variant',
+            ])
             ->orderByDesc('created_at')
-            ->paginate(\request()->query('pagination',20));
+            ->paginate(\request()->query('pagination', 20));
         return UserShowResource::collection($users);
     }
 }
